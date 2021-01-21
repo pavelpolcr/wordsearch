@@ -97,7 +97,7 @@ namespace CrossroadsCZ
             wordfield.Clear();
             CrossRoadField actfield;
             Directions actWordDirection;
-            while (emptyFields.Count>0)
+            while (emptyFields.Count>0) // fill all fields of puzzle
             {
                 
                 actfield = SelectRandomEmptyField(); 
@@ -200,6 +200,12 @@ namespace CrossroadsCZ
             int d = Program.rand.Next(4);
             return (Directions)d;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="actfield">chosen free field of puzzle</param>
+        /// <param name="dir">chosen direction of word characters</param>
+        /// <returns>array of Crossroads fields that combine word</returns>
         public CrossRoadField[] MapWordSpace(CrossRoadField actfield,Directions dir)
         {
             List<CrossRoadField> found = new List<CrossRoadField>();
