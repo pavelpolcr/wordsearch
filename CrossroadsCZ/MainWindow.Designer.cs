@@ -40,6 +40,8 @@ namespace CrossroadsCZ
             this.OutputButton = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.PdfButton = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
@@ -71,10 +73,11 @@ namespace CrossroadsCZ
             this.textBox1.Margin = new System.Windows.Forms.Padding(4);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBox1.Size = new System.Drawing.Size(701, 491);
             this.textBox1.TabIndex = 1;
-            this.textBox1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.textBox1.WordWrap = false;
             // 
             // textBox2
             // 
@@ -82,6 +85,7 @@ namespace CrossroadsCZ
             this.textBox2.Margin = new System.Windows.Forms.Padding(4);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
+            this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBox2.Size = new System.Drawing.Size(477, 491);
             this.textBox2.TabIndex = 2;
@@ -125,11 +129,26 @@ namespace CrossroadsCZ
             this.numericUpDown1.TabIndex = 5;
             this.numericUpDown1.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
             // 
+            // saveFileDialog1
+            // 
+            this.saveFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog1_FileOk);
+            // 
+            // PdfButton
+            // 
+            this.PdfButton.Location = new System.Drawing.Point(464, 15);
+            this.PdfButton.Name = "PdfButton";
+            this.PdfButton.Size = new System.Drawing.Size(75, 23);
+            this.PdfButton.TabIndex = 6;
+            this.PdfButton.Text = "generuj pdf";
+            this.PdfButton.UseVisualStyleBackColor = true;
+            this.PdfButton.Click += new System.EventHandler(this.PdfButton_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1809, 880);
+            this.Controls.Add(this.PdfButton);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.OutputButton);
             this.Controls.Add(this.statusStrip1);
@@ -159,5 +178,7 @@ namespace CrossroadsCZ
         private System.Windows.Forms.Button OutputButton;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.Button PdfButton;
     }
 }
