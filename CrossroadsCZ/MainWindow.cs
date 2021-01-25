@@ -115,6 +115,7 @@ namespace CrossroadsCZ
                 b.ReportProgress(emptyFields.Count());
                 actfield = SelectRandomEmptyField(); 
                 actWordDirection = SelectRandomDirection();
+                actWordDirection = Directions.UrDl;
                 
                 wordfield.Clear();
                 
@@ -296,7 +297,7 @@ namespace CrossroadsCZ
                     yrest = dim-actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y >= 0)
+                    while (x >= 0 && y <dim)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -312,7 +313,7 @@ namespace CrossroadsCZ
                     yrest = dim - actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y >= 0)
+                    while (x < dim && y < dim)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -328,7 +329,7 @@ namespace CrossroadsCZ
                     yrest = actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y >= 0)
+                    while (x >=0 && y >= 0)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
