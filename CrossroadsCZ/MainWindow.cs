@@ -41,13 +41,18 @@ namespace CrossroadsCZ
                 temp2[i] = newit;
             }
             Nouns.AddRange(temp2);
-            dim = 30;
-            //OutputButton.Visible = false;
+            dim = 10;
+            numericUpDown1.Value = 10;
+            OutputButton.Visible = false;
         }
 
         
         public void PrepareGrid(int dim)
         {
+            UsableNouns.Clear();
+            UsedNouns.Clear();
+            fields.Clear();
+            emptyFields.Clear();
             crossRoadGrid = new string[dim, dim]; //arr for final crossroads generation
             for (int i = 0; i < dim; i++)
             {
@@ -87,10 +92,11 @@ namespace CrossroadsCZ
             delegate (object o, RunWorkerCompletedEventArgs args)
             {
                 toolStripStatusLabel1.Text = "Finished!";
+                OutputButton.Visible = true;
             });
 
             PopulateOnBg.RunWorkerAsync();
-            button1.Visible= false;
+            //button1.Visible= false;
            
             
             textBox2.AppendText("testovani");
@@ -171,7 +177,7 @@ namespace CrossroadsCZ
                         wordhavebeenfound = true;
                         string wordtofill = filloptionsL.ElementAt(Program.rand.Next(filloptionsL.Count() - 1));
                         UsedNouns.Add(wordtofill.ToUpper());
-                        Nouns.Remove(wordtofill);
+                        UsableNouns.Remove(wordtofill);
                         for (int i = 0; i < wordfield.Count; i++)
                         {
                             wordfield.ElementAt<CrossRoadField>(i).str = wordtofill.Substring(i, 1);
@@ -298,6 +304,12 @@ namespace CrossroadsCZ
         private void timer1_Tick_1(object sender, EventArgs e)
         {
             toolStripStatusLabel1.Text = emptyFields.Count().ToString();
+        }
+
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+            NumericUpDown num = (NumericUpDown)sender;
+            dim = (int)num.Value;
         }
     }
     public class CrossRoadField

@@ -39,7 +39,9 @@ namespace CrossroadsCZ
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.OutputButton = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
@@ -93,7 +95,6 @@ namespace CrossroadsCZ
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1809, 26);
             this.statusStrip1.TabIndex = 3;
-            
             // 
             // toolStripStatusLabel1
             // 
@@ -116,11 +117,20 @@ namespace CrossroadsCZ
             this.timer1.Interval = 1000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick_1);
             // 
+            // numericUpDown1
+            // 
+            this.numericUpDown1.Location = new System.Drawing.Point(295, 15);
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(120, 22);
+            this.numericUpDown1.TabIndex = 5;
+            this.numericUpDown1.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1809, 880);
+            this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.OutputButton);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.textBox2);
@@ -132,6 +142,7 @@ namespace CrossroadsCZ
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -147,5 +158,6 @@ namespace CrossroadsCZ
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.Button OutputButton;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
     }
 }
