@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -40,8 +41,8 @@ namespace CrossroadsCZ
                 temp2[i] = newit;
             }
             Nouns.AddRange(temp2);
-            dim = 10;
-           
+            dim = 30;
+            //OutputButton.Visible = false;
         }
 
         
@@ -56,50 +57,56 @@ namespace CrossroadsCZ
                     fields.Add(new CrossRoadField(i, j));
                 }
             }
-            var items = from noun in Nouns
+            var items = from noun in Nouns.AsParallel()
                         where noun.Length <= dim
                         select noun;
-            for (int i = 0; i < items.Count(); i++)
-            {
-                UsableNouns.Add(items.ElementAt(i)); //select only nouns with max of dim characters from whole set
-            }
+            UsableNouns.AddRange(items);
         }
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            button1.Visible= false;
             PrepareGrid(dim);
-            Populate();
-            for (int i = 0; i < dim; i++)
-            {
-                textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);
-                for (int j = 0; j < dim; j++)
-                {
-                    var fiel = from f in fields
-                               where f.xcoord == i && f.ycoord == j
-                               select f;
-                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper()+"\t");
-                }
+            BackgroundWorker PopulateOnBg = new BackgroundWorker();
 
-            }
-            for (int i = 0; i < UsedNouns.Count; i++)
+            // this allows our worker to report progress during work
+            PopulateOnBg.WorkerReportsProgress = true;
+
+            // what to do in the background thread
+            PopulateOnBg.DoWork += Populate;
+            
+
+            // what to do when progress changed (update the progress bar for example)
+            PopulateOnBg.ProgressChanged += new ProgressChangedEventHandler(
+            delegate (object o, ProgressChangedEventArgs args)
             {
-                textBox2.AppendText(UsedNouns.ElementAt(i));
-                textBox2.AppendText(Environment.NewLine);
-            }
+                toolStripStatusLabel1.Text = "Generuji, zbyva zaplnit :" + args.ProgressPercentage.ToString() +"/" + (dim*dim).ToString();
+            });
+
+            // what to do when worker completes its task (notify the user)
+            PopulateOnBg.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
+            delegate (object o, RunWorkerCompletedEventArgs args)
+            {
+                toolStripStatusLabel1.Text = "Finished!";
+            });
+
+            PopulateOnBg.RunWorkerAsync();
+            button1.Visible= false;
+           
+            
+            textBox2.AppendText("testovani");
+           
 
             
         }
-        public void Populate()
+        public void Populate(object o, DoWorkEventArgs e)
         {
             wordfield.Clear();
+            BackgroundWorker b = o as BackgroundWorker;
             CrossRoadField actfield;
             Directions actWordDirection;
             while (emptyFields.Count>0) // fill all fields of puzzle
             {
-                
+                b.ReportProgress(emptyFields.Count());
                 actfield = SelectRandomEmptyField(); 
                 actWordDirection = SelectRandomDirection();
                 wordfield.Clear();
@@ -108,8 +115,8 @@ namespace CrossroadsCZ
                 bool wordhavebeenfound = false;
                 while (wordhavebeenfound == false)
                 {
-                    toolStripStatusLabel1.Text = "Generuji - zbyva: " + emptyFields.Count().ToString();
-                    var ValidWords = from noun in Nouns
+                    
+                    var ValidWords = from noun in Nouns.AsParallel()
                                      where noun.Length <= wordfield.Count
                                      select noun;
                     string querry = "";
@@ -125,7 +132,7 @@ namespace CrossroadsCZ
                         }
 
                     }
-                    var filloptions = from w in ValidWords
+                    var filloptions = from w in ValidWords.AsParallel()
                                       where Regex.IsMatch(w, querry)
                                       select w;
                     List<string> filloptionsL = new List<string>();
@@ -145,11 +152,11 @@ namespace CrossroadsCZ
                             actfield.str = SelectRandomChar();
                             //UsedNouns.Add(actfield.str);
                             wordhavebeenfound = true;
-                            var el = from fld in fields
+                            var el = from fld in fields.AsParallel()
                                      where fld.xcoord == actfield.xcoord && fld.ycoord ==actfield.ycoord
                                      select fld;
                             el.ElementAt(0).str = actfield.str;
-                            var el2 = from fld in emptyFields
+                            var el2 = from fld in emptyFields.AsParallel()
                                       where fld.xcoord == actfield.xcoord && fld.ycoord == actfield.ycoord
                                       select fld;
                             if (el2.Count() > 0)
@@ -168,12 +175,12 @@ namespace CrossroadsCZ
                         for (int i = 0; i < wordfield.Count; i++)
                         {
                             wordfield.ElementAt<CrossRoadField>(i).str = wordtofill.Substring(i, 1);
-                            var el = from fld in fields
+                            var el = from fld in fields.AsParallel()
                                      where fld.xcoord == wordfield.ElementAt(i).xcoord && fld.ycoord == wordfield.ElementAt(i).ycoord
                                      select fld;
                             el.ElementAt(0).str = wordfield.ElementAt(i).str;
-                            var el2 = from fld in emptyFields
-                                     where fld.xcoord == wordfield.ElementAt(i).xcoord && fld.ycoord == wordfield.ElementAt(i).ycoord
+                            var el2 = from fld in emptyFields.AsParallel()
+                                      where fld.xcoord == wordfield.ElementAt(i).xcoord && fld.ycoord == wordfield.ElementAt(i).ycoord
                                      select fld;
                             if (el2.Count() > 0)
                             {
@@ -185,6 +192,7 @@ namespace CrossroadsCZ
                 }
                                 
             }
+            
         }
         public string SelectRandomChar()
         {
@@ -217,8 +225,8 @@ namespace CrossroadsCZ
                     
                     for (int i = actfield.xcoord; i >=0 ; i--)
                     {
-                        var fieldts = from f in fields
-                                    where f.ycoord == actfield.ycoord && f.xcoord == i
+                        var fieldts = from f in fields.AsParallel()
+                                      where f.ycoord == actfield.ycoord && f.xcoord == i
                                     select f;
 
                         found.AddRange(fieldts);
@@ -228,7 +236,7 @@ namespace CrossroadsCZ
                     
                     for (int i = actfield.xcoord; i < dim; i++)
                     {
-                        var fieldts = from f in fields
+                        var fieldts = from f in fields.AsParallel()
                                       where f.ycoord == actfield.ycoord && f.xcoord == i
                                       select f;
 
@@ -238,7 +246,7 @@ namespace CrossroadsCZ
                 case Directions.up:
                     for (int i = actfield.ycoord; i>=0; i--)
                     {
-                        var fieldts = from f in fields
+                        var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == actfield.xcoord && f.ycoord == i
                                       select f;
 
@@ -249,7 +257,7 @@ namespace CrossroadsCZ
                    
                     for (int i = actfield.ycoord; i <dim; i++)
                     {
-                        var fieldts = from f in fields
+                        var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == actfield.xcoord && f.ycoord == i
                                       select f;
                        
@@ -262,14 +270,34 @@ namespace CrossroadsCZ
             return found.ToArray();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        
+
+        private void OutputButton_Click(object sender, EventArgs e)
         {
-            toolStripStatusLabel1.Text = emptyFields.Count().ToString();
+            for (int i = 0; i < dim; i++)
+            {
+                textBox1.AppendText(Environment.NewLine);
+                textBox1.AppendText(Environment.NewLine);
+                textBox1.AppendText(Environment.NewLine);
+                for (int j = 0; j < dim; j++)
+                {
+                    var fiel = from f in fields
+                               where f.xcoord == i && f.ycoord == j
+                               select f;
+                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper() + "\t");
+                }
+
+            }
+            for (int i = 0; i < UsedNouns.Count; i++)
+            {
+                textBox2.AppendText(UsedNouns.ElementAt(i));
+                textBox2.AppendText(Environment.NewLine);
+            }
         }
 
-        private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void timer1_Tick_1(object sender, EventArgs e)
         {
-
+            toolStripStatusLabel1.Text = emptyFields.Count().ToString();
         }
     }
     public class CrossRoadField
