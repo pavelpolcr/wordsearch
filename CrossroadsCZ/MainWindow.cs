@@ -42,8 +42,8 @@ namespace CrossroadsCZ
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            //string temp = Resources.czechNouns.ToString();  //load all nouns to list Nouns
-            string temp = Resources.engNouns.ToString();
+            string temp = Resources.czechNouns.ToString();  //load all nouns to list Nouns
+            //string temp = Resources.engNouns.ToString();
             string[] temp2 = temp.Split('\n');
             for(int i=0;i<temp2.Length;i++)
             {
@@ -54,11 +54,13 @@ namespace CrossroadsCZ
             dim = 10;
             numericUpDown1.Value = 10;
             OutputButton.Visible = false;
+            PdfButton.Visible = false;
         }
 
         
         public void PrepareGrid(int dim)
         {
+            
             UsableNouns.Clear();
             UsedNouns.Clear();
             fields.Clear();
@@ -72,6 +74,10 @@ namespace CrossroadsCZ
                     fields.Add(new CrossRoadField(i, j));
                 }
             }
+            
+            
+            
+            
             var items = from noun in Nouns.AsParallel()
                         where noun.Length <= dim
                         select noun;
@@ -80,6 +86,15 @@ namespace CrossroadsCZ
 
         private void button1_Click_1(object sender, EventArgs e)
         {
+            button1.Enabled = false;
+            numericUpDown1.Enabled = false;
+            OutputButton.Enabled = false;
+            
+            toolStripStatusLabel1.Text = "Generuji...";
+            toolStripProgressBar.Maximum = dim * dim;
+            toolStripProgressBar.Step = (dim * dim) / 50;
+            toolStripProgressBar.Value = 0;
+            toolStripProgressBar.Visible = true;
             PrepareGrid(dim);
             BackgroundWorker PopulateOnBg = new BackgroundWorker();
 
@@ -95,6 +110,7 @@ namespace CrossroadsCZ
             delegate (object o, ProgressChangedEventArgs args)
             {
                 toolStripStatusLabel1.Text = "Generuji, zbyva zaplnit :" + args.ProgressPercentage.ToString() +"/" + (dim*dim).ToString();
+                toolStripProgressBar.Value = (dim * dim) - args.ProgressPercentage;
             });
 
             // what to do when worker completes its task (notify the user)
@@ -103,13 +119,17 @@ namespace CrossroadsCZ
             {
                 toolStripStatusLabel1.Text = "Finished!";
                 OutputButton.Visible = true;
+                button1.Enabled = true;
+                numericUpDown1.Enabled = true;
+                OutputButton.Enabled = true;
+                toolStripProgressBar.Visible = false;
             });
 
             PopulateOnBg.RunWorkerAsync();
             //button1.Visible= false;
            
             
-            textBox2.AppendText("testovani");
+            
            
 
             
@@ -360,24 +380,30 @@ namespace CrossroadsCZ
 
         private void OutputButton_Click(object sender, EventArgs e)
         {
-            
+            textBox1.Font = new Font(FontFamily.GenericMonospace, textBox1.Font.Size);
+            textBox1.Clear();
+            textBox2.Clear();
+            textBox2.AppendText("Slova ktera lze najit:");
+            textBox2.AppendText(Environment.NewLine);
+            textBox2.AppendText(Environment.NewLine);
             for (int i = 0; i < dim; i++)
             {
+                textBox1.AppendText(Environment.NewLine);/*
                 textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);
+                textBox1.AppendText(Environment.NewLine);*/
                 for (int j = 0; j < dim; j++)
                 {
                     var fiel = from f in fields
                                where f.xcoord == j && f.ycoord == i
                                select f;
-                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper() + "\t");
+                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper()+" " /*+ "\t"*/);
                     
 
                 }
                 
 
             }
+            
             for (int i = 0; i < UsedNouns.Count; i++)
             {
                 textBox2.AppendText(UsedNouns.ElementAt(i));
@@ -409,6 +435,7 @@ namespace CrossroadsCZ
         {
             Table table = new Table(dim);
             
+            
             for (int i = 0; i < dim; i++)
             {
 
@@ -425,14 +452,19 @@ namespace CrossroadsCZ
             }
 
             string temp = "C:\\TEST\\test.pdf";
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK) 
+            {
+                temp = saveFileDialog1.FileName;
+                
+                FileInfo outPdfFile = new FileInfo(temp);
+                outPdfFile.Directory.Create();
+                PdfDocument outPdf = new PdfDocument(new PdfWriter(outPdfFile.FullName));
 
-            FileInfo outPdfFile = new FileInfo(temp);
-            outPdfFile.Directory.Create();
-            PdfDocument outPdf = new PdfDocument(new PdfWriter(outPdfFile.FullName));
+                Document doc = new Document(outPdf);
+                doc.Add(table);
+                doc.Close();
+            }
             
-            Document doc = new Document(outPdf);
-            doc.Add(table);
-            doc.Close();
 
         }
     }

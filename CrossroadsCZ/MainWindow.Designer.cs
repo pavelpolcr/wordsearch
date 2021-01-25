@@ -37,6 +37,7 @@ namespace CrossroadsCZ
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.OutputButton = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
@@ -69,42 +70,48 @@ namespace CrossroadsCZ
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(63, 50);
+            this.textBox1.Location = new System.Drawing.Point(63, 44);
             this.textBox1.Margin = new System.Windows.Forms.Padding(4);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(701, 491);
+            this.textBox1.Size = new System.Drawing.Size(1024, 806);
             this.textBox1.TabIndex = 1;
             this.textBox1.WordWrap = false;
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(971, 50);
+            this.textBox2.Location = new System.Drawing.Point(1199, 44);
             this.textBox2.Margin = new System.Windows.Forms.Padding(4);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox2.Size = new System.Drawing.Size(477, 491);
+            this.textBox2.Size = new System.Drawing.Size(290, 491);
             this.textBox2.TabIndex = 2;
             // 
             // statusStrip1
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 854);
+            this.toolStripStatusLabel1,
+            this.toolStripProgressBar});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 730);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1809, 26);
+            this.statusStrip1.Size = new System.Drawing.Size(1525, 35);
             this.statusStrip1.TabIndex = 3;
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(151, 20);
-            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 29);
+            // 
+            // toolStripProgressBar
+            // 
+            this.toolStripProgressBar.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripProgressBar.Name = "toolStripProgressBar";
+            this.toolStripProgressBar.Size = new System.Drawing.Size(375, 27);
             // 
             // OutputButton
             // 
@@ -147,7 +154,7 @@ namespace CrossroadsCZ
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1809, 880);
+            this.ClientSize = new System.Drawing.Size(1525, 765);
             this.Controls.Add(this.PdfButton);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.OutputButton);
@@ -180,5 +187,6 @@ namespace CrossroadsCZ
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.Button PdfButton;
+        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar;
     }
 }
