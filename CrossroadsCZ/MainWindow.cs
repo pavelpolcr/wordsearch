@@ -23,7 +23,7 @@ namespace CrossroadsCZ
         public List<CrossRoadField> wordfield = new List<CrossRoadField>();
         string[,] crossRoadGrid;
         int dim;
-        public enum Directions {left,right,up,down};
+        public enum Directions {left,right,up,down,DlUr,UrDl,UlDr,DrUl};
 
 
         public MainWindow()
@@ -115,6 +115,7 @@ namespace CrossroadsCZ
                 b.ReportProgress(emptyFields.Count());
                 actfield = SelectRandomEmptyField(); 
                 actWordDirection = SelectRandomDirection();
+                
                 wordfield.Clear();
                 
                 wordfield.AddRange(MapWordSpace(actfield,actWordDirection)); // checked
@@ -211,7 +212,7 @@ namespace CrossroadsCZ
         }
         public Directions SelectRandomDirection()
         {
-            int d = Program.rand.Next(4);
+            int d = Program.rand.Next(8);
             return (Directions)d;
         }
         /// <summary>
@@ -223,6 +224,10 @@ namespace CrossroadsCZ
         public CrossRoadField[] MapWordSpace(CrossRoadField actfield,Directions dir)
         {
             List<CrossRoadField> found = new List<CrossRoadField>();
+            int x;
+            int y;
+            int xrest;
+            int yrest;
             
             //found.Add(actfield);
             switch (dir)
@@ -270,12 +275,76 @@ namespace CrossroadsCZ
                         found.AddRange(fieldts);
                     }
                     break;
+                case Directions.DlUr: //down left to up right corner diagonal
+                     xrest = dim - actfield.xcoord;
+                     yrest = actfield.ycoord;
+                     x = actfield.xcoord;
+                     y = actfield.ycoord;
+                    while(x<dim&&y>=0)
+                    {
+                        var fieldts = from f in fields.AsParallel()
+                                      where f.xcoord == x && f.ycoord == y
+                                      select f;
+
+                        found.AddRange(fieldts);
+                        x += 1;
+                        y -= 1;
+                    }
+                    break;
+                case Directions.UrDl: //down left to up right corner diagonal
+                    xrest = actfield.xcoord;
+                    yrest = dim-actfield.ycoord;
+                    x = actfield.xcoord;
+                    y = actfield.ycoord;
+                    while (x < dim && y >= 0)
+                    {
+                        var fieldts = from f in fields.AsParallel()
+                                      where f.xcoord == x && f.ycoord == y
+                                      select f;
+
+                        found.AddRange(fieldts);
+                        x -= 1;
+                        y += 1;
+                    }
+                    break;
+                case Directions.UlDr: //down left to up right corner diagonal
+                    xrest = dim - actfield.xcoord;
+                    yrest = dim - actfield.ycoord;
+                    x = actfield.xcoord;
+                    y = actfield.ycoord;
+                    while (x < dim && y >= 0)
+                    {
+                        var fieldts = from f in fields.AsParallel()
+                                      where f.xcoord == x && f.ycoord == y
+                                      select f;
+
+                        found.AddRange(fieldts);
+                        x += 1;
+                        y += 1;
+                    }
+                    break;
+                case Directions.DrUl: //down left to up right corner diagonal
+                    xrest = actfield.xcoord;
+                    yrest = actfield.ycoord;
+                    x = actfield.xcoord;
+                    y = actfield.ycoord;
+                    while (x < dim && y >= 0)
+                    {
+                        var fieldts = from f in fields.AsParallel()
+                                      where f.xcoord == x && f.ycoord == y
+                                      select f;
+
+                        found.AddRange(fieldts);
+                        x -= 1;
+                        y -= 1;
+                    }
+                    break;
                 default:
                     break;
             }
             return found.ToArray();
         }
-
+        
         
 
         private void OutputButton_Click(object sender, EventArgs e)
@@ -288,7 +357,7 @@ namespace CrossroadsCZ
                 for (int j = 0; j < dim; j++)
                 {
                     var fiel = from f in fields
-                               where f.xcoord == i && f.ycoord == j
+                               where f.xcoord == j && f.ycoord == i
                                select f;
                     textBox1.AppendText(fiel.ElementAt(0).str.ToUpper() + "\t");
                 }
