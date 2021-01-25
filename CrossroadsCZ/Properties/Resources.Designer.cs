@@ -115,5 +115,64 @@ namespace CrossroadsCZ.Properties {
                 return ResourceManager.GetString("czechNouns", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ATM
+        ///CD
+        ///SUV
+        ///TV
+        ///aardvark
+        ///abacus
+        ///abbey
+        ///abbreviation
+        ///abdomen
+        ///ability
+        ///abnormality
+        ///abolishment
+        ///abortion
+        ///abrogation
+        ///absence
+        ///abundance
+        ///abuse
+        ///academics
+        ///academy
+        ///accelerant
+        ///accelerator
+        ///accent
+        ///acceptance
+        ///access
+        ///accessory
+        ///accident
+        ///accommodation
+        ///accompanist
+        ///accomplishment
+        ///accord
+        ///accordance
+        ///accordion
+        ///account
+        ///accountability
+        ///accountant
+        ///accounting
+        ///accuracy
+        ///accusation
+        ///acetate
+        ///achievement
+        ///achiever
+        ///acid
+        ///acknowledgment
+        ///acorn
+        ///acoustics
+        ///acquaintance
+        ///acquisition
+        ///acre
+        ///acrylic
+        ///act
+        ///act [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string engNouns {
+            get {
+                return ResourceManager.GetString("engNouns", resourceCulture);
+            }
+        }
     }
 }

@@ -15,6 +15,8 @@ using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using System.IO;
+using iText.Kernel.Font;
+using iText.IO.Font;
 
 namespace CrossroadsCZ
 {
@@ -40,7 +42,8 @@ namespace CrossroadsCZ
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            string temp = Resources.czechNouns.ToString();  //load all nouns to list Nouns
+            //string temp = Resources.czechNouns.ToString();  //load all nouns to list Nouns
+            string temp = Resources.engNouns.ToString();
             string[] temp2 = temp.Split('\n');
             for(int i=0;i<temp2.Length;i++)
             {
@@ -404,8 +407,33 @@ namespace CrossroadsCZ
 
         private void PdfButton_Click(object sender, EventArgs e)
         {
+            Table table = new Table(dim);
             
+            for (int i = 0; i < dim; i++)
+            {
+
+                for (int j = 0; j < dim; j++)
+                {
+                    var fiel = from f in fields
+                               where f.xcoord == j && f.ycoord == i
+                               select f;
+
+                    table.AddCell(fiel.ElementAt(0).str.ToUpper());
+
+                }
+                table.StartNewRow();
+            }
+
+            string temp = "C:\\TEST\\test.pdf";
+
+            FileInfo outPdfFile = new FileInfo(temp);
+            outPdfFile.Directory.Create();
+            PdfDocument outPdf = new PdfDocument(new PdfWriter(outPdfFile.FullName));
             
+            Document doc = new Document(outPdf);
+            doc.Add(table);
+            doc.Close();
+
         }
     }
     public class CrossRoadField
