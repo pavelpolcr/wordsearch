@@ -10,6 +10,13 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using System.IO;
+using iText.Kernel.Font;
+using iText.IO.Font;
 
 namespace CrossroadsCZ
 {
@@ -21,8 +28,10 @@ namespace CrossroadsCZ
         public List<CrossRoadField> fields = new List<CrossRoadField>();
         public List<CrossRoadField> emptyFields = new List<CrossRoadField>();
         public List<CrossRoadField> wordfield = new List<CrossRoadField>();
+        
         string[,] crossRoadGrid;
         int dim;
+        
         public enum Directions {left,right,up,down,DlUr,UrDl,UlDr,DrUl};
 
 
@@ -34,6 +43,7 @@ namespace CrossroadsCZ
         private void MainWindow_Load(object sender, EventArgs e)
         {
             string temp = Resources.czechNouns.ToString();  //load all nouns to list Nouns
+            //string temp = Resources.engNouns.ToString();
             string[] temp2 = temp.Split('\n');
             for(int i=0;i<temp2.Length;i++)
             {
@@ -44,11 +54,13 @@ namespace CrossroadsCZ
             dim = 10;
             numericUpDown1.Value = 10;
             OutputButton.Visible = false;
+            PdfButton.Visible = false;
         }
 
         
         public void PrepareGrid(int dim)
         {
+            
             UsableNouns.Clear();
             UsedNouns.Clear();
             fields.Clear();
@@ -62,6 +74,10 @@ namespace CrossroadsCZ
                     fields.Add(new CrossRoadField(i, j));
                 }
             }
+            
+            
+            
+            
             var items = from noun in Nouns.AsParallel()
                         where noun.Length <= dim
                         select noun;
@@ -70,6 +86,15 @@ namespace CrossroadsCZ
 
         private void button1_Click_1(object sender, EventArgs e)
         {
+            button1.Enabled = false;
+            numericUpDown1.Enabled = false;
+            OutputButton.Enabled = false;
+            
+            toolStripStatusLabel1.Text = "Generuji...";
+            toolStripProgressBar.Maximum = dim * dim;
+            toolStripProgressBar.Step = (dim * dim) / 50;
+            toolStripProgressBar.Value = 0;
+            toolStripProgressBar.Visible = true;
             PrepareGrid(dim);
             BackgroundWorker PopulateOnBg = new BackgroundWorker();
 
@@ -85,6 +110,7 @@ namespace CrossroadsCZ
             delegate (object o, ProgressChangedEventArgs args)
             {
                 toolStripStatusLabel1.Text = "Generuji, zbyva zaplnit :" + args.ProgressPercentage.ToString() +"/" + (dim*dim).ToString();
+                toolStripProgressBar.Value = (dim * dim) - args.ProgressPercentage;
             });
 
             // what to do when worker completes its task (notify the user)
@@ -93,13 +119,17 @@ namespace CrossroadsCZ
             {
                 toolStripStatusLabel1.Text = "Finished!";
                 OutputButton.Visible = true;
+                button1.Enabled = true;
+                numericUpDown1.Enabled = true;
+                OutputButton.Enabled = true;
+                toolStripProgressBar.Visible = false;
             });
 
             PopulateOnBg.RunWorkerAsync();
             //button1.Visible= false;
            
             
-            textBox2.AppendText("testovani");
+            
            
 
             
@@ -115,7 +145,7 @@ namespace CrossroadsCZ
                 b.ReportProgress(emptyFields.Count());
                 actfield = SelectRandomEmptyField(); 
                 actWordDirection = SelectRandomDirection();
-                
+                             
                 wordfield.Clear();
                 
                 wordfield.AddRange(MapWordSpace(actfield,actWordDirection)); // checked
@@ -123,7 +153,7 @@ namespace CrossroadsCZ
                 while (wordhavebeenfound == false)
                 {
                     
-                    var ValidWords = from noun in Nouns.AsParallel()
+                    var ValidWords = from noun in UsableNouns.AsParallel()
                                      where noun.Length <= wordfield.Count
                                      select noun;
                     string querry = "";
@@ -203,7 +233,8 @@ namespace CrossroadsCZ
         }
         public string SelectRandomChar()
         {
-            return "A";
+            int chrint = Program.rand.Next(65, 91);
+            return ((char)chrint).ToString();
         }
         public CrossRoadField SelectRandomEmptyField()
         {
@@ -296,7 +327,7 @@ namespace CrossroadsCZ
                     yrest = dim-actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y >= 0)
+                    while (x >= 0 && y <dim)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -312,7 +343,7 @@ namespace CrossroadsCZ
                     yrest = dim - actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y >= 0)
+                    while (x < dim && y < dim)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -328,7 +359,7 @@ namespace CrossroadsCZ
                     yrest = actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y >= 0)
+                    while (x >=0 && y >= 0)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -349,25 +380,39 @@ namespace CrossroadsCZ
 
         private void OutputButton_Click(object sender, EventArgs e)
         {
+            textBox1.Font = new Font(FontFamily.GenericMonospace, textBox1.Font.Size);
+            textBox1.Clear();
+            textBox2.Clear();
+            textBox2.AppendText("Slova ktera lze najit:");
+            textBox2.AppendText(Environment.NewLine);
+            textBox2.AppendText(Environment.NewLine);
             for (int i = 0; i < dim; i++)
             {
+                textBox1.AppendText(Environment.NewLine);/*
                 textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);
+                textBox1.AppendText(Environment.NewLine);*/
                 for (int j = 0; j < dim; j++)
                 {
                     var fiel = from f in fields
                                where f.xcoord == j && f.ycoord == i
                                select f;
-                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper() + "\t");
+                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper()+" " /*+ "\t"*/);
+                    
+
                 }
+                
 
             }
+            
             for (int i = 0; i < UsedNouns.Count; i++)
             {
                 textBox2.AppendText(UsedNouns.ElementAt(i));
                 textBox2.AppendText(Environment.NewLine);
             }
+            
+            
+
+            
         }
 
         private void timer1_Tick_1(object sender, EventArgs e)
@@ -379,6 +424,48 @@ namespace CrossroadsCZ
         {
             NumericUpDown num = (NumericUpDown)sender;
             dim = (int)num.Value;
+        }
+
+        private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+
+        }
+
+        private void PdfButton_Click(object sender, EventArgs e)
+        {
+            Table table = new Table(dim);
+            
+            
+            for (int i = 0; i < dim; i++)
+            {
+
+                for (int j = 0; j < dim; j++)
+                {
+                    var fiel = from f in fields
+                               where f.xcoord == j && f.ycoord == i
+                               select f;
+
+                    table.AddCell(fiel.ElementAt(0).str.ToUpper());
+
+                }
+                table.StartNewRow();
+            }
+
+            string temp = "C:\\TEST\\test.pdf";
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK) 
+            {
+                temp = saveFileDialog1.FileName;
+                
+                FileInfo outPdfFile = new FileInfo(temp);
+                outPdfFile.Directory.Create();
+                PdfDocument outPdf = new PdfDocument(new PdfWriter(outPdfFile.FullName));
+
+                Document doc = new Document(outPdf);
+                doc.Add(table);
+                doc.Close();
+            }
+            
+
         }
     }
     public class CrossRoadField

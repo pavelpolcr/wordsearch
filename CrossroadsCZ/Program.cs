@@ -9,6 +9,7 @@ namespace CrossroadsCZ
     class Program
     {
         public static Random rand = new Random();
+        [STAThread]
         static void Main(string[] args)
         {
             MainWindow f1 = new MainWindow();
