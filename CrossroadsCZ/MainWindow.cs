@@ -26,12 +26,11 @@ namespace CrossroadsCZ
         public List<string> UsableNouns = new List<string>();
         public List<string> UsedNouns = new List<string>();
         public List<CrossRoadField> fields = new List<CrossRoadField>();
-        public List<CrossRoadField> emptyFields = new List<CrossRoadField>();
-        public List<CrossRoadField> wordfield = new List<CrossRoadField>();
-        
+        public List<CrossRoadField> emptyFields = new List<CrossRoadField>(); // all puzzle fields not filled already
+        public List<CrossRoadField> wordfield = new List<CrossRoadField>();// list containing currently edited fields/currently added word from nouns
         string[,] crossRoadGrid;
-        int dim;
-        
+        public int PuzzleDimension { get; set; }
+
         public enum Directions {left,right,up,down,DlUr,UrDl,UlDr,DrUl};
 
 
@@ -42,22 +41,27 @@ namespace CrossroadsCZ
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
+            PrepareVocabulary();
+            PuzzleDimension = 10;
+            numericUpDown1.Value = 10;
+            
+            PdfButton.Visible = false;
+        }
+        /// <summary>
+        /// Prepade list Nouns containing all czech nouns formatted and ready to use. 
+        /// </summary>
+        private void PrepareVocabulary()
+        {
             string temp = Resources.czechNouns.ToString();  //load all nouns to list Nouns
-            //string temp = Resources.engNouns.ToString();
             string[] temp2 = temp.Split('\n');
-            for(int i=0;i<temp2.Length;i++)
+            for (int i = 0; i < temp2.Length; i++)
             {
                 string newit = temp2[i].Remove(temp2[i].Length - 1);
                 temp2[i] = newit;
             }
             Nouns.AddRange(temp2);
-            dim = 10;
-            numericUpDown1.Value = 10;
-            OutputButton.Visible = false;
-            PdfButton.Visible = false;
         }
 
-        
         public void PrepareGrid(int dim)
         {
             
@@ -65,7 +69,7 @@ namespace CrossroadsCZ
             UsedNouns.Clear();
             fields.Clear();
             emptyFields.Clear();
-            crossRoadGrid = new string[dim, dim]; //arr for final crossroads generation
+            crossRoadGrid = new string[dim, dim]; //arr for final puzzle generation
             for (int i = 0; i < dim; i++)
             {
                 for (int j = 0; j < dim; j++)
@@ -88,68 +92,66 @@ namespace CrossroadsCZ
         {
             button1.Enabled = false;
             numericUpDown1.Enabled = false;
-            OutputButton.Enabled = false;
-            
             toolStripStatusLabel1.Text = "Generuji...";
-            toolStripProgressBar.Maximum = dim * dim;
-            toolStripProgressBar.Step = (dim * dim) / 50;
+            toolStripProgressBar.Maximum = PuzzleDimension * PuzzleDimension;
+            toolStripProgressBar.Step = (PuzzleDimension * PuzzleDimension) / 50;
             toolStripProgressBar.Value = 0;
             toolStripProgressBar.Visible = true;
-            PrepareGrid(dim);
-            BackgroundWorker PopulateOnBg = new BackgroundWorker();
-
-            // this allows our worker to report progress during work
-            PopulateOnBg.WorkerReportsProgress = true;
-
-            // what to do in the background thread
-            PopulateOnBg.DoWork += Populate;
+            PrepareGrid(PuzzleDimension);
+            FillPuzzle();
             
 
-            // what to do when progress changed (update the progress bar for example)
+        }
+        /// <summary>
+        /// Uses prepared gris and fill it with words from nouns. 
+        /// </summary>
+        private void FillPuzzle()
+        {
+            BackgroundWorker PopulateOnBg = new BackgroundWorker(); // Backgroud worker to async fill of puzzle
+            PopulateOnBg.WorkerReportsProgress = true;
+            PopulateOnBg.DoWork += Populate;
             PopulateOnBg.ProgressChanged += new ProgressChangedEventHandler(
-            delegate (object o, ProgressChangedEventArgs args)
+            delegate (object o, ProgressChangedEventArgs args) //what to do on progress of bg work 
             {
-                toolStripStatusLabel1.Text = "Generuji, zbyva zaplnit :" + args.ProgressPercentage.ToString() +"/" + (dim*dim).ToString();
-                toolStripProgressBar.Value = (dim * dim) - args.ProgressPercentage;
+                toolStripStatusLabel1.Text = "Generuji, zbyva zaplnit :" + args.ProgressPercentage.ToString() + "/" + (PuzzleDimension * PuzzleDimension).ToString();
+                toolStripProgressBar.Value = (PuzzleDimension * PuzzleDimension) - args.ProgressPercentage;
             });
-
-            // what to do when worker completes its task (notify the user)
-            PopulateOnBg.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
+            PopulateOnBg.RunWorkerCompleted += new RunWorkerCompletedEventHandler( //what to do on work done
             delegate (object o, RunWorkerCompletedEventArgs args)
             {
                 toolStripStatusLabel1.Text = "Finished!";
-                OutputButton.Visible = true;
                 button1.Enabled = true;
                 numericUpDown1.Enabled = true;
-                OutputButton.Enabled = true;
                 toolStripProgressBar.Visible = false;
+                WritePuzzleOutput();
             });
 
             PopulateOnBg.RunWorkerAsync();
             //button1.Visible= false;
-           
-            
-            
-           
-
-            
         }
+        /// <summary>
+        /// Used to actually fill all the wors of puzzle
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="e"></param>
         public void Populate(object o, DoWorkEventArgs e)
         {
             wordfield.Clear();
             BackgroundWorker b = o as BackgroundWorker;
-            CrossRoadField actfield;
+            CrossRoadField actfield; // field currently chosen as start of puzzle word composing. 
             Directions actWordDirection;
             while (emptyFields.Count>0) // fill all fields of puzzle
             {
                 b.ReportProgress(emptyFields.Count());
                 actfield = SelectRandomEmptyField(); 
                 actWordDirection = SelectRandomDirection();
-                             
-                wordfield.Clear();
-                
-                wordfield.AddRange(MapWordSpace(actfield,actWordDirection)); // checked
                 bool wordhavebeenfound = false;
+                wordfield.Clear();                
+                wordfield.AddRange(MapWordSpace(actfield,actWordDirection)); 
+                if (wordfield.Count > 15) // cutoff for speading up big puzzles generation  - we will use only first 15 letters. 
+                {
+                    wordfield.RemoveRange(15, wordfield.Count - 15);
+                }
                 while (wordhavebeenfound == false)
                 {
                     
@@ -169,7 +171,7 @@ namespace CrossroadsCZ
                         }
 
                     }
-                    var filloptions = from w in ValidWords.AsParallel()
+                    var filloptions = from w in ValidWords.AsParallel() // find all nouns that can match 
                                       where Regex.IsMatch(w, querry)
                                       select w;
                     List<string> filloptionsL = new List<string>();
@@ -177,7 +179,7 @@ namespace CrossroadsCZ
                     filloptionsL.AddRange(filloptions.ToArray());
                     if (filloptionsL.Count() == 0)
                     {
-                        if (wordfield.Count > 1)
+                        if (wordfield.Count > 1)        //delete last character in wordfield and trz again to find shorter word
                         {
                             wordfield.RemoveAt(wordfield.Count - 1);
                             
@@ -187,7 +189,6 @@ namespace CrossroadsCZ
                         else
                         {
                             actfield.str = SelectRandomChar();
-                            //UsedNouns.Add(actfield.str);
                             wordhavebeenfound = true;
                             var el = from fld in fields.AsParallel()
                                      where fld.xcoord == actfield.xcoord && fld.ycoord ==actfield.ycoord
@@ -276,7 +277,7 @@ namespace CrossroadsCZ
                     break;
                 case Directions.right:
                     
-                    for (int i = actfield.xcoord; i < dim; i++)
+                    for (int i = actfield.xcoord; i < PuzzleDimension; i++)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.ycoord == actfield.ycoord && f.xcoord == i
@@ -297,7 +298,7 @@ namespace CrossroadsCZ
                     break;
                 case Directions.down:
                    
-                    for (int i = actfield.ycoord; i <dim; i++)
+                    for (int i = actfield.ycoord; i <PuzzleDimension; i++)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == actfield.xcoord && f.ycoord == i
@@ -307,11 +308,11 @@ namespace CrossroadsCZ
                     }
                     break;
                 case Directions.DlUr: //down left to up right corner diagonal
-                     xrest = dim - actfield.xcoord;
+                     xrest = PuzzleDimension - actfield.xcoord;
                      yrest = actfield.ycoord;
                      x = actfield.xcoord;
                      y = actfield.ycoord;
-                    while(x<dim&&y>=0)
+                    while(x<PuzzleDimension&&y>=0)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -322,12 +323,12 @@ namespace CrossroadsCZ
                         y -= 1;
                     }
                     break;
-                case Directions.UrDl: //down left to up right corner diagonal
+                case Directions.UrDl: //up right to left down corner diagonal 
                     xrest = actfield.xcoord;
-                    yrest = dim-actfield.ycoord;
+                    yrest = PuzzleDimension-actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x >= 0 && y <dim)
+                    while (x >= 0 && y <PuzzleDimension)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -338,12 +339,12 @@ namespace CrossroadsCZ
                         y += 1;
                     }
                     break;
-                case Directions.UlDr: //down left to up right corner diagonal
-                    xrest = dim - actfield.xcoord;
-                    yrest = dim - actfield.ycoord;
+                case Directions.UlDr: //up left to down right corner diagonal
+                    xrest = PuzzleDimension - actfield.xcoord;
+                    yrest = PuzzleDimension - actfield.ycoord;
                     x = actfield.xcoord;
                     y = actfield.ycoord;
-                    while (x < dim && y < dim)
+                    while (x < PuzzleDimension && y < PuzzleDimension)
                     {
                         var fieldts = from f in fields.AsParallel()
                                       where f.xcoord == x && f.ycoord == y
@@ -354,7 +355,7 @@ namespace CrossroadsCZ
                         y += 1;
                     }
                     break;
-                case Directions.DrUl: //down left to up right corner diagonal
+                case Directions.DrUl: //down right to up left corner diagonal
                     xrest = actfield.xcoord;
                     yrest = actfield.ycoord;
                     x = actfield.xcoord;
@@ -380,66 +381,51 @@ namespace CrossroadsCZ
 
         private void OutputButton_Click(object sender, EventArgs e)
         {
+            WritePuzzleOutput();
+
+        }
+
+        private void WritePuzzleOutput()
+        {
             textBox1.Font = new Font(FontFamily.GenericMonospace, textBox1.Font.Size);
             textBox1.Clear();
             textBox2.Clear();
             textBox2.AppendText("Slova ktera lze najit:");
             textBox2.AppendText(Environment.NewLine);
             textBox2.AppendText(Environment.NewLine);
-            for (int i = 0; i < dim; i++)
+            for (int i = 0; i < PuzzleDimension; i++)
             {
-                textBox1.AppendText(Environment.NewLine);/*
                 textBox1.AppendText(Environment.NewLine);
-                textBox1.AppendText(Environment.NewLine);*/
-                for (int j = 0; j < dim; j++)
+                for (int j = 0; j < PuzzleDimension; j++)
                 {
                     var fiel = from f in fields
                                where f.xcoord == j && f.ycoord == i
                                select f;
-                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper()+" " /*+ "\t"*/);
-                    
-
+                    textBox1.AppendText(fiel.ElementAt(0).str.ToUpper() + " ");
                 }
-                
-
             }
-            
+
             for (int i = 0; i < UsedNouns.Count; i++)
             {
                 textBox2.AppendText(UsedNouns.ElementAt(i));
                 textBox2.AppendText(Environment.NewLine);
             }
-            
-            
-
-            
-        }
-
-        private void timer1_Tick_1(object sender, EventArgs e)
-        {
-            toolStripStatusLabel1.Text = emptyFields.Count().ToString();
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
         {
             NumericUpDown num = (NumericUpDown)sender;
-            dim = (int)num.Value;
+            PuzzleDimension = (int)num.Value;
         }
-
-        private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+        private void PdfButton_Click(object sender, EventArgs e) // currently anused
         {
-
-        }
-
-        private void PdfButton_Click(object sender, EventArgs e)
-        {
-            Table table = new Table(dim);
+            Table table = new Table(PuzzleDimension);
             
             
-            for (int i = 0; i < dim; i++)
+            for (int i = 0; i < PuzzleDimension; i++)
             {
 
-                for (int j = 0; j < dim; j++)
+                for (int j = 0; j < PuzzleDimension; j++)
                 {
                     var fiel = from f in fields
                                where f.xcoord == j && f.ycoord == i
